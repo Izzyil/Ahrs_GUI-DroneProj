@@ -61,11 +61,30 @@ def clearLog():
 	print("deleting log..\r\n")
 	textbox.delete('1.0',END)
 
+	
+horizon = pygame.image.load('horizon.png')
+ahrsDisplay.blit(horizon, (0, 0))
+layer = pygame.image.load('base.png')
+ahrsDisplay.blit(layer, (0, 0))
+pitchScale = pygame.image.load('pitchScale.png')
+ahrsDisplay.blit(pitchScale, (0, 0))
+ladyLegs = pygame.image.load('ladyLegs.png')
+ahrsDisplay.blit(ladyLegs, (0, 0))
+headingFrame = pygame.image.load('headingFrame.png')
+ahrsDisplay.blit(headingFrame, (0, 0))
+cameraFeed = pygame.image.load('cameraFeed.png')
+ahrsDisplay.blit(cameraFeed, (0, 0))
+equipInfo = pygame.image.load('equipInfo.png')
+ahrsDisplay.blit(equipInfo, (0, 0))
+warning = pygame.image.load('warning.png')
+ahrsDisplay.blit(warning, (0, 0))
+###############################################################	
+	
 rightFrame = Frame(rightSide, width=300, height = 900)
 rightFrame.grid(row=0, column=0, padx=0, pady=0)
 
 #########################com frame config
-CommFrame = LabelFrame(rightFrame,text='com', width=300, height = 300)
+CommFrame = LabelFrame(rightFrame,text='Com', width=300, height = 300)
 CommFrame.grid(row=0, column=0, padx=5, pady=2,sticky=W+E)
 
 lcomport = Label(CommFrame,width=10,height=2,text="COM Port:")
@@ -94,14 +113,17 @@ lComportStatus.grid(row=2, column=2, padx=10, pady=2)
 ###############################################################################
 
 ######################view frame config 
-ViewFrame = LabelFrame(rightFrame,text='View Setting', width=300, height = 100)
+ViewFrame = LabelFrame(rightFrame,text='View Info', width=300, height = 100)
 ViewFrame.grid(row=1, column=0, padx=5, pady=2,sticky=W+E)
 
 cbxCamra = Checkbutton(ViewFrame,text='Camera',state=ACTIVE,variable=NONE)
 cbxCamra.grid(row=0, column=0, padx=10, pady=2, sticky='w')
 
-chxSetting = Checkbutton(ViewFrame,text='Setting',state=ACTIVE)
-chxSetting.grid(row=1, column=0, padx=10, pady=2, sticky='w')
+chxInfo = Checkbutton(ViewFrame,text='Info',state=ACTIVE)
+chxInfo.grid(row=0, column=1, padx=10, pady=2, sticky='e')
+
+chxWornings = Checkbutton(ViewFrame,text='Warnings',state=ACTIVE)
+chxWornings.grid(row=1, column=0, padx=10, pady=2, sticky='w')
 
 ###############################################################################
 
