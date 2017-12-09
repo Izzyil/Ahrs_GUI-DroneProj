@@ -11,6 +11,7 @@ import math
 
 import tkinter.scrolledtext as tkscrolledtext
 from tkinter import filedialog
+import serial_rx_tx
 import _thread
 import time
 import webbrowser
@@ -25,6 +26,16 @@ blue = (0,0,255)
 white = (255,255,255)
 
 pi = 3.141592653
+
+serialPort = serial_rx_tx.SerialPort()
+# serial data callback function
+def OnReceiveSerialData(message):
+	# print("Reciving Data..\r\n")
+    str_message = message.decode("utf-8")
+    textbox.insert('1.0', str_message)
+
+# Register the callback above with the serial port object
+serialPort.RegisterReceiveCallback(OnReceiveSerialData)
 
 clock=pygame.time.Clock()
 
@@ -47,37 +58,84 @@ pygame.display.set_caption('Izzy AHRS GUI')
 pygame.display.update()
 
 quit = False
+up=0
+upUpdate=0
+degree=0
+dgreeUpdate=0
+center=(500,500)
+begin=(0,0)
+warningDis= tk.IntVar()
+infoDis= tk.IntVar()
+cameraDis= tk.IntVar()
 
 def connect():
-	lComportStatus.config(text='Connected',foreground="green")
-	print("connectiong")
+	comPort=cbCommPort.get()
+	baudrate=lPortRate.get()
+	serialPort.Open(comPort, baudrate)
+	if (serialPort.IsOpen() == True):
+		print("Connecting..\r\n")
+		lComportStatus.config(text='Connected',foreground="green")
+		textbox.insert('1.0', "Connected..\r\n")
+	else:
+		textbox.insert('1.0', "Can not connect (no such port)\r\n")
+		print("Can not connect\r\n")
 
 def disconnect():
-	lComportStatus.config(text='DisConnected',foreground="red")
-	print("disconnecting")
+	if (serialPort.IsOpen() == True):
+		serialPort.Close()
+		print("DisConnecting..\r\n")
+		textbox.insert('1.0', "Disconnected..\r\n")
+		lComportStatus.config(text='DisConnected',foreground="red")
+	else:
+		print("Error: no such port")
 
 def clearLog():
 	AltCanvas.delete("all")
 	print("deleting log..\r\n")
 	textbox.delete('1.0',END)
-
 	
-horizon = pygame.image.load('horizon.png')
-ahrsDisplay.blit(horizon, (0, 0))
-layer = pygame.image.load('base.png')
-ahrsDisplay.blit(layer, (0, 0))
-pitchScale = pygame.image.load('pitchScale.png')
-ahrsDisplay.blit(pitchScale, (0, 0))
-ladyLegs = pygame.image.load('ladyLegs.png')
-ahrsDisplay.blit(ladyLegs, (0, 0))
-headingFrame = pygame.image.load('headingFrame.png')
-ahrsDisplay.blit(headingFrame, (0, 0))
-cameraFeed = pygame.image.load('cameraFeed.png')
-ahrsDisplay.blit(cameraFeed, (0, 0))
-equipInfo = pygame.image.load('equipInfo.png')
-ahrsDisplay.blit(equipInfo, (0, 0))
-warning = pygame.image.load('warning.png')
-ahrsDisplay.blit(warning, (0, 0))
+def rot_center(image):
+	size=image.get_size() #Store size
+	hSize=[n/2 for n in size] #Half the size
+	pos=[center[0]-hSize[0],center[1]-hSize[1]]  #Substract half the size
+	return pos
+	
+def draw(img, pos):
+	ahrsDisplay.blit(img,pos)
+
+def drawHorizon():
+	global dgreeUpdate
+	global degree
+	global upUpdate
+	global up
+	global change
+	
+	dgreeUpdate +=degree
+	upUpdate +=up
+	horizonUpdtae= pygame.transform.rotate(horizonFrame, dgreeUpdate)
+	change=rot_center(horizonUpdtae)
+	change[1]+=upUpdate
+	draw(horizonUpdtae,change)
+
+def drawCamera():
+	if cameraDis.get():
+		draw(cameraFrame,begin)
+	else:
+		dpos = (1001,1001)
+		draw(cameraFrame,dpos)
+def drawWarning():
+	if warningDis.get():
+		draw(warningFrame,begin)
+	else:
+		dpos = (1001,1001)
+		draw(warningFrame,dpos)
+
+def drawInfo():
+	if infoDis.get():
+		draw(infoFrame,begin)
+	else:
+		dpos = (1001,1001)
+		draw(infoFrame,dpos)
 ###############################################################	
 	
 rightFrame = Frame(rightSide, width=300, height = 900)
@@ -116,13 +174,13 @@ lComportStatus.grid(row=2, column=2, padx=10, pady=2)
 ViewFrame = LabelFrame(rightFrame,text='View Info', width=300, height = 100)
 ViewFrame.grid(row=1, column=0, padx=5, pady=2,sticky=W+E)
 
-cbxCamra = Checkbutton(ViewFrame,text='Camera',state=ACTIVE,variable=NONE)
+cbxCamra = Checkbutton(ViewFrame,text='Camera',variable=cameraDis,onvalue=1,offvalue=0)
 cbxCamra.grid(row=0, column=0, padx=10, pady=2, sticky='w')
 
-chxInfo = Checkbutton(ViewFrame,text='Info',state=ACTIVE)
+chxInfo = Checkbutton(ViewFrame,text='Info',variable=infoDis,onvalue=1,offvalue=0)
 chxInfo.grid(row=0, column=1, padx=10, pady=2, sticky='e')
 
-chxWornings = Checkbutton(ViewFrame,text='Warnings',state=ACTIVE)
+chxWornings = Checkbutton(ViewFrame,text='Warnings',variable=warningDis,onvalue=1,offvalue=0)
 chxWornings.grid(row=1, column=0, padx=10, pady=2, sticky='w')
 
 ###############################################################################
@@ -163,14 +221,48 @@ textbox.grid(row=1, padx=0, pady=0)
 
 ###############################################################################
 
+###############################################################################	
+horizonFrame = pygame.image.load('horizon.png')
+layerFrame = pygame.image.load('base.png')
+pitchScaleFrame = pygame.image.load('pitchScale.png')
+ladyFrame = pygame.image.load('ladyLegs.png')
+headingFrame = pygame.image.load('headingFrame.png')
+cameraFrame = pygame.image.load('cameraFeed.png')	
+infoFrame = pygame.image.load('equipInfo.png')
+warningFrame = pygame.image.load('warning.png')
+	
 while not quit:
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			gameExit = True
-
+		if event.type == pygame.KEYDOWN:
+			if event.key == pygame.K_RIGHT:
+				degree = -1
+			if event.key == pygame.K_LEFT:
+				degree = 1
+			if event.key == pygame.K_DOWN:
+				up =up+-3
+			if event.key == pygame.K_UP:
+				up = 3
+		if event.type == pygame.KEYUP:
+			if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
+				degree = 0
+			if event.key == pygame.K_UP or event.key == pygame.K_DOWN:
+				up = 0
+				
+	drawHorizon()
+	draw(layerFrame,begin)
+	draw(pitchScaleFrame,begin)
+	draw(ladyFrame,begin)
+	draw(headingFrame,begin)
+	drawCamera()
+	drawInfo()
+	drawWarning()
+	
+		
 	pygame.display.update()
 	root.update() 
-	clock.tick(30)
+	clock.tick(50)
 	
 pygame.quit()
 quit()
