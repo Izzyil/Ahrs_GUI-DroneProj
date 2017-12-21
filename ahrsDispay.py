@@ -51,6 +51,7 @@ up=0
 upUpdate=0
 degree=0
 dgreeUpdate=0
+imageCenter=(-500,-500)
 center=(500,500)
 begin=(0,0)
 warningDis= tk.IntVar()
@@ -64,9 +65,9 @@ def showTkinter():
 	def OnReceiveSerialData(message):
 		buffer = message.decode("utf-8")
 		textbox.insert('1.0', buffer)
-		
+
 	serialPort.RegisterReceiveCallback(OnReceiveSerialData)
-	
+
 	def connect():
 		comPort=cbCommPort.get()
 		baudrate=lPortRate.get()
@@ -91,8 +92,8 @@ def showTkinter():
 	def clearLog():
 		print("deleting log..\r\n")
 		textbox.delete('1.0',END)
-	
-	
+
+
 	rightFrame = Frame(rightSide, width=300, height = 900)
 	rightFrame.grid(row=0, column=0, padx=0, pady=0)
 	ConsleFrame = LabelFrame(rightFrame,text='Console', width=300, height = 600)
@@ -132,7 +133,7 @@ def showTkinter():
 	######################view frame config 
 	ViewFrame = LabelFrame(rightFrame,text='View Info', width=300, height = 100)
 	ViewFrame.grid(row=1, column=0, padx=5, pady=2,sticky=W+E)
-	
+
 	cbxCamra = Checkbutton(ViewFrame,text='Camera',variable=cameraDis,onvalue=1,offvalue=0)
 	cbxCamra.grid(row=0, column=0, padx=10, pady=2, sticky='w')
 
@@ -147,7 +148,7 @@ def showTkinter():
 	######################camera config 
 	viewFrame = LabelFrame(rightFrame,text='Camera Setting', width=300, height = 200)
 	viewFrame.grid(row=2, column=0, padx=5, pady=2,sticky=W+E)
-
+	
 	lZoom= Label(viewFrame,width=10,height=2,text="ZOOM:")
 	lZoom.grid(row=0, column=0, padx=0, pady=0)
 
@@ -164,7 +165,7 @@ def showTkinter():
 
 	bClear = Button(ConsleFrame,text="Clear",width=10,command=clearLog)
 	bClear.grid(row=0, column=0, padx=10, pady=2, sticky='e')	
-	
+
 	while not quit:
 		pass
 		
@@ -174,7 +175,7 @@ def showPygame():
 	global up	
 	global degree
 	global buffer
-	
+
 	clock=pygame.time.Clock()
 	def rot_center(image):
 		size=image.get_size() #Store size
@@ -187,16 +188,30 @@ def showPygame():
 	def drawHorizon():	
 		global dgreeUpdate
 		global upUpdate
-		global change
 		global up	
 		global degree
-	
+
 		dgreeUpdate +=degree
 		upUpdate +=up
 		horizonUpdtae= pygame.transform.rotate(horizonFrame, dgreeUpdate)
 		change=rot_center(horizonUpdtae)
 		change[1]+=upUpdate
+		#change-=imageCenter
 		draw(horizonUpdtae,change)
+
+	def drawPitch():	
+		global dgreeUpdate
+		global upUpdate
+		global up	
+		global degree
+
+		dgreeUpdate +=degree
+		upUpdate +=up
+		pitchScaleUpdate= pygame.transform.rotate(pitchScaleFrame, dgreeUpdate)
+		change=rot_center(pitchScaleUpdate)
+		change[1]+=upUpdate
+		#change-=imageCenter
+		draw(pitchScaleUpdate,change)
 
 	def drawCamera():
 		if cameraDis.get():
@@ -217,9 +232,9 @@ def showPygame():
 		else:
 			dpos = (1001,1001)
 			draw(infoFrame,dpos)
-	
+
 	global quit
-	horizonFrame = pygame.image.load('horizon.png')
+	horizonFrame = pygame.image.load('bak1.png')
 	layerFrame = pygame.image.load('base.png')
 	pitchScaleFrame = pygame.image.load('pitchScale.png')
 	ladyFrame = pygame.image.load('ladyLegs.png')
@@ -227,7 +242,7 @@ def showPygame():
 	cameraFrame = pygame.image.load('cameraFeed.png')	
 	infoFrame = pygame.image.load('equipInfo.png')
 	warningFrame = pygame.image.load('warning.png')
-	
+
 	while not quit:	
 		for event in pygame.event.get():
 			if event.type == pygame.KEYDOWN:
@@ -244,8 +259,9 @@ def showPygame():
 					degree = 0
 				if event.key == pygame.K_UP or event.key == pygame.K_DOWN:
 					up = 0
-				
+
 		drawHorizon()
+		drawPitch()
 		draw(layerFrame,begin)
 		draw(pitchScaleFrame,begin)
 		draw(ladyFrame,begin)
@@ -253,10 +269,9 @@ def showPygame():
 		drawCamera()
 		drawInfo()
 		drawWarning()
-		
+
 		pygame.display.update()
 		clock.tick(30)
-
 
 	
 t_tkinter=threading.Thread(target=showTkinter)
