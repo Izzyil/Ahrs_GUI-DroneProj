@@ -88,6 +88,7 @@ class Dispay:
 				self.screen.blit(self.obj[i], self.pos[i])
 			else:
 				self.screen.blit(self.obj[i], out_pos)
+		display.updateInfo()
 	def setShow(self, img, show):
 		self.show[img] = show
 		print("setting show for %s to %s" %(self.img[img], show))
@@ -114,7 +115,13 @@ class Dispay:
 		self.rect[ImgPitch] = img.get_rect(center=self.rect[ImgPitch].center)
 		x, y = self.rect[ImgPitch].width/2-150, self.rect[ImgPitch].height/2-150+self.pitch
 		self.obj[ImgPitch] = img.subsurface((x, y, 300, 300))
-		self.pos[ImgPitch]= 350,350
+		self.pos[ImgPitch]= 350,350 
+		# for event in pygame.event.get():	
+			# if event.type == pygame.KEYDOWN:
+				# if event.key == pygame.K_p:
+					# print('positio:'+str(x)+str(y))
+					# print('\nsin(roll):', str(math.sin(roll)))
+					# -math.sin(self.roll)*self.pitch
 
 	def updateRoll(self):
 		self.obj[ImgHorizon]= pygame.transform.rotate(self.defObj[ImgHorizon], self.roll)
@@ -123,12 +130,12 @@ class Dispay:
 		self.pos[ImgHorizon]= change
 	
 	def updateInfo(self):
-		info = pygame.font.Font('Roboto-Regular.ttf', 30)
-		data= 'Pitch:'+str(self.pitch)+'\nRoll:'+str(self.roll)+'\nHeading:'+str(self.heading)
-		self.obj[InfoData] = info.render(data, True, white)
-		self.rect[InfoData] = self.obj[InfoData].get_rect(center =center)
-		self.rect[InfoData].center = (info_pos)
-		self.pos[InfoData] = info_pos
+		data= ['Pitch:'+str(self.pitch), 'Roll:'+str(self.roll), 'Heading:'+str(self.heading), 'Alt:'+str(self.alt)]
+		pos = info_pos
+		for i in range(4):
+			info = pygame.font.Font('Roboto-Regular.ttf', 30)
+			line = info.render(data[i], True, white)
+			self.screen.blit(line,(pos[0],pos[1]+(i*30)))
 
 gameExit = False
 up = 0
@@ -147,7 +154,7 @@ while not gameExit:
 			
 			if event.type == pygame.KEYDOWN:
 				if event.key == pygame.K_p:
-					print(display.img[ImgPitch])
+					print(display.pitch)
 				if event.key == pygame.K_w:
 					p = -2
 				if event.key == pygame.K_s:
@@ -183,7 +190,6 @@ while not gameExit:
 	display.updateRoll()
 	display.updatePitch()
 	display.updateHeading()
-	display.updateInfo()
 
 	display.draw()
 
